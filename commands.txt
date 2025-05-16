@@ -51,7 +51,7 @@ exit
 wr
 
 ## Router Corporativo
-### WIC-1ENET card
+### NOTA agregar el modulo WIC-1ENET al router
 
 enable
 configure terminal
@@ -102,7 +102,7 @@ wr
 
 
 ## Router ISP
-### WIC-1ENET card
+### NOTA agregar el modulo WIC-1ENET al router
 
 enable
 configure terminal
@@ -220,13 +220,11 @@ interface fastEthernet 0/0.3
 ip access-group 100 in
 exit
 
-
-# Pings
-ping 200.10.10.100
-no ping 200.10.10.200
+exit
+wr
 
 
-# Comandos ver configuracion 
+# Comandos para ver configuracion 
 show vlan
 show ip int brief
 show ip nat translations
