@@ -1,0 +1,242 @@
+# Configuracion conectividad
+
+## Switch Corporativo
+
+enable
+configure terminal
+hostname SW-CORPORATIVO
+
+vlan 2
+name LAN_10.0.0.0/9
+exit
+
+vlan 3
+name LAN_10.128.0.0/9
+exit
+
+vlan 999
+name NATIVA
+exit
+
+interface fastEthernet 0/2
+description PC_A
+switchport mode access
+switchport access vlan 2
+no shutdown
+exit
+
+interface fastEthernet 0/10
+description PC_B
+switchport mode access
+switchport access vlan 3
+no shutdown
+exit
+
+interface fastEthernet 0/15
+description SERVIDOR_INTRANET
+switchport mode access
+switchport access vlan 3
+no shutdown
+exit
+
+interface fastEthernet 0/24
+description CONEXION A ROUTER_CORPORATIVO
+switchport mode trunk
+switchport trunk native vlan 999
+switchport trunk allowed vlan 2,3,999
+no shutdown
+exit
+
+exit
+wr
+
+## Router Corporativo
+### WIC-1ENET card
+
+enable
+configure terminal
+hostname ROUTER-CORPORATIVO
+enable secret cisco123
+banner motd $EQUIPO PROTEGIDO POR LA LEGISLACION COLOMBIANA$
+
+line vty 0 15
+password cisco123
+login
+exit
+
+interface fastEthernet 0/0
+description CONEXION A LAN_CORPORATIVA
+no shutdown
+exit
+
+interface fastEthernet 0/0.2
+description CONEXION A LAN_10.0.0.0/9
+encapsulation dot1Q 2
+ip address 10.0.0.1 255.128.0.0
+no shutdown
+exit
+
+interface fastEthernet 0/0.3
+description CONEXION A LAN_10.128.0.0/9
+encapsulation dot1Q  3
+ip address 10.128.0.1 255.128.0.0
+no shutdown
+exit
+
+interface fastEthernet 0/1
+description CONEXION A DMZ
+ip address 220.100.100.1 255.255.255.0
+no shutdown
+exit
+
+interface ethernet 0/3/0
+description CONEXION A ROUTER_ISP
+ip address 210.0.0.2 255.255.255.252
+no shutdown
+exit
+
+ip route 0.0.0.0 0.0.0.0 210.0.0.1
+
+exit
+wr
+
+
+## Router ISP
+### WIC-1ENET card
+
+enable
+configure terminal
+hostname ROUTER_ISP
+enable secret cisco123
+banner motd $EQUIPO PROTEGIDO POR LA LEGISLACION COLOMBIANA$
+
+line vty 0 15
+password cisco123
+login
+exit
+
+interface ethernet 0/3/0
+description CONEXION WAN A RED_CORPORATIVA
+ip address 210.0.0.1 255.255.255.252
+no shutdown
+exit
+
+interface fastEthernet 0/0
+description CONEXION A RED INTERNET
+ip address 200.10.10.1 255.255.255.0
+no shutdown
+exit
+
+ip route 10.0.0.0 255.0.0.0 210.0.0.2
+ip route 220.100.100.0 255.255.255.0 210.0.0.2
+
+exit
+wr
+
+## Switch Corporativo
+enable
+configure terminal
+hostname SW-ISP
+enable secret cisco123
+banner motd $EQUIPO PROTEGIDO POR LA LEGISLACION COLOMBIANA$
+
+vlan 2
+name EQUIPOS_INTERNET
+exit
+
+interface fastEthernet 0/5
+description CONEXION A ROUTER_ISP
+switchport mode access
+switchport access vlan 2
+no shutdown
+exit
+
+interface fastEthernet 0/10
+description SERVIDOR_CORREO_INTERNET
+switchport mode access
+switchport access vlan 2
+no shutdown
+exit
+
+interface fastEthernet 0/20
+description USUARIO_INTERNET
+switchport mode access
+switchport access vlan 2
+no shutdown
+exit
+
+exit
+wr
+
+
+# Configuracion NAT
+
+Pool_nat: 230.100.100.0/24
+Ip publica del PC_A: 222.100.100.10
+
+## Router Corporativo
+enable
+cofigure terminal
+
+ip nat inside source static 10.0.0.20 230.100.100.10
+ip nat inside source static 10.128.0.30 230.100.100.11
+ip nat inside source static 10.128.0.10 230.100.100.12
+
+interface fastEthernet 0/0.2
+ip nat inside
+exit
+
+interface fastEthernet 0/0.3
+ip nat inside
+exit
+
+interface ethernet 0/3/0
+ip nat outside
+exit
+
+no ip nat inside source static 10.0.0.20 230.100.100.10
+no ip nat inside source static 10.128.0.30 230.100.100.11
+no ip nat inside source static 10.128.0.10 230.100.100.12
+
+
+ip nat inside source static 10.0.0.20 222.100.100.10
+ip nat inside source static 10.128.0.30 222.100.100.11
+ip nat inside source static 10.128.0.10 222.100.100.12
+
+exit
+wr
+
+## Router ISP
+
+enable
+configure terminal
+
+no ip route 10.0.0.0 255.0.0.0 210.0.0.2
+ip route 230.100.100.0 255.255.255.0 210.0.0.2
+
+no ip route 230.100.100.0 255.255.255.0 210.0.0.2
+ip route 222.100.100.0 255.255.255.0 210.0.0.2
+
+
+#### Pings
+ping 200.10.10.100
+no ping 200.10.10.200
+
+# Politica para PC_B
+
+## Router Corporativo
+enable
+cofigure terminal
+
+access-list 100 permit icmp host 10.128.0.30 200.10.10.100 0.0.0.0 echo
+
+interface fastEthernet 0/0.3
+ip access-group 100 in
+exit
+
+
+# Comandos ver configuracion 
+show vlan
+show ip int brief
+show ip nat translations
+show access-lists
