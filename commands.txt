@@ -178,9 +178,9 @@ Ip publica del PC_A: 222.100.100.10
 enable
 cofigure terminal
 
-ip nat inside source static 10.0.0.20 230.100.100.10
-ip nat inside source static 10.128.0.30 230.100.100.11
-ip nat inside source static 10.128.0.10 230.100.100.12
+ip nat inside source static 10.0.0.20 222.100.100.10
+ip nat inside source static 10.128.0.30 222.100.100.11
+ip nat inside source static 10.128.0.10 222.100.100.12
 
 interface fastEthernet 0/0.2
 ip nat inside
@@ -194,15 +194,6 @@ interface ethernet 0/3/0
 ip nat outside
 exit
 
-no ip nat inside source static 10.0.0.20 230.100.100.10
-no ip nat inside source static 10.128.0.30 230.100.100.11
-no ip nat inside source static 10.128.0.10 230.100.100.12
-
-
-ip nat inside source static 10.0.0.20 222.100.100.10
-ip nat inside source static 10.128.0.30 222.100.100.11
-ip nat inside source static 10.128.0.10 222.100.100.12
-
 exit
 wr
 
@@ -212,15 +203,10 @@ enable
 configure terminal
 
 no ip route 10.0.0.0 255.0.0.0 210.0.0.2
-ip route 230.100.100.0 255.255.255.0 210.0.0.2
-
-no ip route 230.100.100.0 255.255.255.0 210.0.0.2
 ip route 222.100.100.0 255.255.255.0 210.0.0.2
 
-
-#### Pings
-ping 200.10.10.100
-no ping 200.10.10.200
+exit
+wr
 
 # Politica para PC_B
 
@@ -233,6 +219,11 @@ access-list 100 permit icmp host 10.128.0.30 200.10.10.100 0.0.0.0 echo
 interface fastEthernet 0/0.3
 ip access-group 100 in
 exit
+
+
+# Pings
+ping 200.10.10.100
+no ping 200.10.10.200
 
 
 # Comandos ver configuracion 
